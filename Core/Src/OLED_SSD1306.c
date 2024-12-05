@@ -280,15 +280,9 @@ void SSD1306_SpiInit(SPI_HandleTypeDef *spi)
 //
 // Draw pixel in the buffer
 //
-int16_t rotat_90 = 1;
-
-void SSD1306_SetRotation(int16_t x){
-	rotat_90 = x;
-}
-
 void SSD1306_DrawPixel(int16_t x, int16_t y, uint8_t Color)
 {
-	if (rotat_90)
+	if (currentOLED->rotation_90)
 	{
 		if ((x < 0) || (x >= SSD1306_LCDHEIGHT) || (y < 0) || (y >= SSD1306_LCDWIDTH))
 				 return;

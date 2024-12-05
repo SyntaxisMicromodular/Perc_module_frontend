@@ -157,7 +157,6 @@ void SSD1306_SetContrast(uint8_t Contrast);
 //
 // Drawing
 //
-void SSD1306_SetRotation(int16_t x);
 void SSD1306_DrawPixel(int16_t x, int16_t y, uint8_t Color);
 void SSD1306_Clear(uint8_t Color);
 void SSD1306_Display(void);
