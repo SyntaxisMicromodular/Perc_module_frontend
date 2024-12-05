@@ -1,0 +1,4 @@
+../Core/Src/cpp_main.cpp:20:6:void initializeOLEDs()	16	static
+../Core/Src/cpp_main.cpp:53:6:void drawScreen()	16	static
+../Core/Src/cpp_main.cpp:76:6:void setup()	8	static
+../Core/Src/cpp_main.cpp:80:6:void loop()	8	static
