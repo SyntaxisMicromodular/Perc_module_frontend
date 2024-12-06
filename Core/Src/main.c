@@ -20,6 +20,7 @@
 #include "main.h"
 #include "dma.h"
 #include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -94,8 +95,14 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   setup();
+  if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
+  {
+	/* Starting Error */
+	Error_Handler();
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -164,6 +171,12 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 #if defined(SSD1306_SPI_CONTROL) && defined(SSD1306_SPI_DMA_ENABLE)
 	SSD1306_DmaEndCallback(hspi);
 #endif
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if (htim == &htim6){
+		Timer6Interrupt();
+	}
 }
 /* USER CODE END 4 */
 

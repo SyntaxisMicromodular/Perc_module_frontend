@@ -10,6 +10,7 @@
 #include "OLED_SSD1306.h"
 #include "GFX_BW.h"
 #include "fonts/fonts.h"
+#include "encoder.h"
 #include <math.h>
 #include <string>
 
@@ -21,7 +22,16 @@
 struct OLEDdefinition oled1;
 struct OLEDdefinition oled2;
 
-char state[17] = "0000000000000000";
+Encoder enc1;
+Encoder enc2;
+Encoder enc3;
+Encoder enc4;
+
+char stringstate[17] = "0000000000000000";
+bool state[16];
+char msg[20] = "";
+uint8_t currentReadChannel = 0;
+bool readState = false;
 
 void initializeOLEDs(){
 	oled1.PortCS = SSD1306_CS_GPIO_Port;
@@ -64,7 +74,7 @@ void drawScreen(){
 			SSD1306_SetOLED(&oled1);
 			SSD1306_Clear(BLACK);
 			GFX_SetFontSize(1);
-			GFX_DrawString(0,3, state, WHITE, BLACK);
+			GFX_DrawString(0,3, stringstate, WHITE, BLACK);
 			SSD1306_Display();
 
 
@@ -74,37 +84,103 @@ void drawScreen(){
 			SSD1306_SetOLED(&oled2);
 			SSD1306_Clear(BLACK);
 			GFX_SetFontSize(1);
-			GFX_DrawString(0,3, "drugi", WHITE, BLACK);
+			GFX_DrawString(0,3, msg, WHITE, BLACK);
 			SSD1306_Display();
 
 			while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 		}
 }
 
-void readInputStates(){
-	for (uint8_t i = 0; i < 16; i++){
-		HAL_GPIO_WritePin(MUX_A_GPIO_Port, MUX_A_Pin, (GPIO_PinState)bitRead(i, 0));
-		HAL_GPIO_WritePin(MUX_B_GPIO_Port, MUX_B_Pin, (GPIO_PinState)bitRead(i, 1));
-		HAL_GPIO_WritePin(MUX_C_GPIO_Port, MUX_C_Pin, (GPIO_PinState)bitRead(i, 2));
-		HAL_GPIO_WritePin(MUX_D_GPIO_Port, MUX_D_Pin, (GPIO_PinState)bitRead(i, 3));
+void writeAddress(uint8_t channel){
+	HAL_GPIO_WritePin(MUX_A_GPIO_Port, MUX_A_Pin, (GPIO_PinState)bitRead(channel, 0));
+	HAL_GPIO_WritePin(MUX_B_GPIO_Port, MUX_B_Pin, (GPIO_PinState)bitRead(channel, 1));
+	HAL_GPIO_WritePin(MUX_C_GPIO_Port, MUX_C_Pin, (GPIO_PinState)bitRead(channel, 2));
+	HAL_GPIO_WritePin(MUX_D_GPIO_Port, MUX_D_Pin, (GPIO_PinState)bitRead(channel, 3));
+}
 
-		HAL_Delay(1);
+void readInputState(uint8_t channel){
+	state[channel] = (HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
 
-		if(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin)){
-			state[i] = '1';
-		}
-		else{
-			state[i] = '0';
-		}
+//#define showpins
+#ifdef showpins
+	if(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin)){
+		stringstate[i] = '1';
 	}
+	else{
+		stringstate[i] = '0';
+	}
+#endif
+}
+
+void enc1Callback(EncoderDirection dir, uint8_t velocity){
+	if (dir == Decrement){
+		strncpy(msg, "enc1--", 20);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+	}
+	if (dir == Increment){
+		strncpy(msg, "enc1++", 20);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+	}
+}
+
+void enc2Callback(EncoderDirection dir, uint8_t velocity){
+	if (dir == Decrement){
+		strncpy(msg, "enc2--", 20);
+	}
+	if (dir == Increment){
+		strncpy(msg, "enc2++", 20);
+	}
+}
+
+void enc3Callback(EncoderDirection dir, uint8_t velocity){
+	if (dir == Decrement){
+		strncpy(msg, "enc3--", 20);
+	}
+	if (dir == Increment){
+		strncpy(msg, "enc3++", 20);
+	}
+}
+
+void enc4Callback(EncoderDirection dir, uint8_t velocity){
+	if (dir == Decrement){
+		strncpy(msg, "enc4--", 20);
+	}
+	if (dir == Increment){
+		strncpy(msg, "enc4++", 20);
+	}
+}
+
+void initializeEncoders(){
+	enc1.setCallback(enc1Callback);
+	enc2.setCallback(enc2Callback);
+	enc3.setCallback(enc3Callback);
+	enc4.setCallback(enc4Callback);
 }
 
 void setup(){
 	initializeOLEDs();
+	initializeEncoders();
+}
+
+void Timer6Interrupt(){
+	if (!readState){
+		writeAddress(currentReadChannel);
+		readState = true;
+	}
+	if(readState){
+		readInputState(currentReadChannel);
+		currentReadChannel++;
+		if (currentReadChannel == 17){
+			currentReadChannel = 0;
+			enc1.refresh(state[1], state[0]);
+			//enc2.refresh(state[4], state[3]);
+			//enc3.refresh(state[6], state[7]);
+			//enc4.refresh(state[9], state[10]);
+		}
+		readState = false;
+	}
 }
 
 void loop(){
 	drawScreen();
-	readInputStates();
-	HAL_Delay(10);
 }

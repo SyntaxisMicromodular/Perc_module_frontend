@@ -59,6 +59,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define SSD1306_DC_Pin GPIO_PIN_4
 #define SSD1306_DC_GPIO_Port GPIOA
+#define SSD1306_RESET_Pin GPIO_PIN_5
+#define SSD1306_RESET_GPIO_Port GPIOA
 #define SSD1306_CS_Pin GPIO_PIN_6
 #define SSD1306_CS_GPIO_Port GPIOA
 #define SSD1306_CS2_Pin GPIO_PIN_0
@@ -71,8 +73,6 @@ void Error_Handler(void);
 #define MUX_A_GPIO_Port GPIOA
 #define MUX_B_Pin GPIO_PIN_12
 #define MUX_B_GPIO_Port GPIOA
-#define SSD1306_RESET_Pin GPIO_PIN_4
-#define SSD1306_RESET_GPIO_Port GPIOB
 #define MUX_C_Pin GPIO_PIN_5
 #define MUX_C_GPIO_Port GPIOB
 #define MUX_D_Pin GPIO_PIN_6

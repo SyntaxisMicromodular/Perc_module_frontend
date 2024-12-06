@@ -15,6 +15,8 @@ extern "C"
 
 void setup();
 
+void Timer6Interrupt();
+
 void loop();
 
 #ifdef __cplusplus

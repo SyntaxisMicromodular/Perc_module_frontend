@@ -1,0 +1,9 @@
+../Core/Src/encoder.cpp:3:6:void Encoder::setIncrementValue(int32_t)	0	static
+../Core/Src/encoder.cpp:7:6:void Encoder::setConstrains(int32_t, int32_t)	0	static
+../Core/Src/encoder.cpp:12:6:void Encoder::setRollover(bool)	0	static
+../Core/Src/encoder.cpp:16:9:uint8_t Encoder::calculateVelocity()	0	static
+../Core/Src/encoder.cpp:26:6:void Encoder::refresh(bool, bool)	8	static
+../Core/Src/encoder.cpp:77:9:int32_t Encoder::getCounter()	0	static
+../Core/Src/encoder.cpp:81:6:void Encoder::setCounter(int32_t)	0	static
+../Core/Src/encoder.cpp:93:6:bool Encoder::isChange()	0	static
+../Core/Src/encoder.cpp:101:6:void Encoder::setCallback(void (*)(EncoderDirection, uint8_t))	0	static
