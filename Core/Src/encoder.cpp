@@ -27,6 +27,11 @@ void Encoder::refresh(bool clk, bool data){
   a = clk;
   b = data;
 
+  if (!pa && a) {
+      data ? OnChange(Increment, 0) : OnChange(Decrement, 0);
+      data ? counter++ : counter--;
+  }
+/*
   if (!pa && a) currentState = ClkRising;
   if (pa && !a) currentState = ClkFalling;
   if (!pb && b){
@@ -48,8 +53,8 @@ void Encoder::refresh(bool clk, bool data){
 	  }
   }
 
+*/
 
-  /*
   if (counter < lowerConstrain) {
     if (allowRollover)
     {
@@ -69,7 +74,7 @@ void Encoder::refresh(bool clk, bool data){
     {
       counter = upperConstrain;
     }
-  }*/
+  }
 
   pa = a;
   pb = b;

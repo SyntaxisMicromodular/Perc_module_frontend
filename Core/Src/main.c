@@ -48,7 +48,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+#define buffersize 255
+uint8_t uartbuffer[buffersize] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,18 +99,22 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   setup();
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer, buffersize);
   if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
   {
 	/* Starting Error */
 	Error_Handler();
   }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
-	  loop();
+	 loop();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -177,6 +182,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim == &htim6){
 		Timer6Interrupt();
 	}
+}
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+{
+    // Check if UART2 trigger the Callback
+    if(huart->Instance == USART2)
+    {
+    	UART_received(&uartbuffer, Size);
+    	HAL_UART_Transmit_DMA(&huart2, uartbuffer, Size);
+        // Start to listening again - IMPORTANT!
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer, buffersize);
+    }
 }
 /* USER CODE END 4 */
 

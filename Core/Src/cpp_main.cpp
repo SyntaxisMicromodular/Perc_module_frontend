@@ -75,6 +75,7 @@ void drawScreen(){
 			SSD1306_Clear(BLACK);
 			GFX_SetFontSize(1);
 			GFX_DrawString(0,3, stringstate, WHITE, BLACK);
+			GFX_DrawString(0,11, msg, WHITE, BLACK);
 			SSD1306_Display();
 
 
@@ -84,7 +85,15 @@ void drawScreen(){
 			SSD1306_SetOLED(&oled2);
 			SSD1306_Clear(BLACK);
 			GFX_SetFontSize(1);
-			GFX_DrawString(0,3, msg, WHITE, BLACK);
+			char tmp[20] = "";
+			sprintf(tmp, "Enc1 = %d", enc1.getCounter());
+			GFX_DrawString(0,3, tmp, WHITE, BLACK);
+			sprintf(tmp, "Enc2 = %d", enc2.getCounter());
+			GFX_DrawString(0,11, tmp, WHITE, BLACK);
+			sprintf(tmp, "Enc3 = %d", enc3.getCounter());
+			GFX_DrawString(0,19, tmp, WHITE, BLACK);
+			sprintf(tmp, "Enc4 = %d", enc4.getCounter());
+			GFX_DrawString(0,27, tmp, WHITE, BLACK);
 			SSD1306_Display();
 
 			while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
@@ -101,13 +110,13 @@ void writeAddress(uint8_t channel){
 void readInputState(uint8_t channel){
 	state[channel] = (HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
 
-//#define showpins
+#define showpins
 #ifdef showpins
 	if(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin)){
-		stringstate[i] = '1';
+		stringstate[channel] = '1';
 	}
 	else{
-		stringstate[i] = '0';
+		stringstate[channel] = '0';
 	}
 #endif
 }
@@ -150,11 +159,23 @@ void enc4Callback(EncoderDirection dir, uint8_t velocity){
 	}
 }
 
+void emptyCallback(EncoderDirection dir, uint8_t velocity){
+
+}
+
 void initializeEncoders(){
-	enc1.setCallback(enc1Callback);
-	enc2.setCallback(enc2Callback);
-	enc3.setCallback(enc3Callback);
-	enc4.setCallback(enc4Callback);
+	enc1.setCallback(emptyCallback);
+	enc2.setCallback(emptyCallback);
+	enc3.setCallback(emptyCallback);
+	enc4.setCallback(emptyCallback);
+	enc1.setConstrains(0, 256);
+	enc2.setConstrains(0, 256);
+	enc3.setConstrains(0, 256);
+	enc4.setConstrains(0, 256);
+	enc1.setCounter(1);
+	enc2.setCounter(1);
+	enc3.setCounter(1);
+	enc4.setCounter(1);
 }
 
 void setup(){
@@ -169,16 +190,22 @@ void Timer6Interrupt(){
 	}
 	if(readState){
 		readInputState(currentReadChannel);
-		currentReadChannel++;
+		++currentReadChannel;
 		if (currentReadChannel == 17){
 			currentReadChannel = 0;
-			enc1.refresh(state[1], state[0]);
-			//enc2.refresh(state[4], state[3]);
-			//enc3.refresh(state[6], state[7]);
+			enc1.refresh(state[0], state[1]);
+			enc2.refresh(state[3], state[4]);
+			enc3.refresh(state[6], state[7]);
 			//enc4.refresh(state[9], state[10]);
 		}
 		readState = false;
 	}
+}
+
+void UART_received(char* buf, uint16_t size){
+	char emptymsg[20] = "";
+	strncpy(msg, emptymsg, 20);
+	strncpy(msg, buf, size > 20 ? 20 : size - 2);
 }
 
 void loop(){
