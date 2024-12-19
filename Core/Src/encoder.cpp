@@ -13,47 +13,39 @@ void Encoder::setRollover(bool input){
   allowRollover = input;
 }
 
-uint8_t Encoder::calculateVelocity(){
-  //deltaT = millis() - lastMillis;
-  //lastMillis = millis();
+void Encoder::setVelocityRecognition(bool input){
+  allowVelocityRecognition = input;
+}
 
-  //if (deltaT <  40) return 8;
-  //if (deltaT <  80) return 4;
-  //if (deltaT < 120) return 2;
+uint8_t Encoder::calculateVelocity(){
+  if (!allowVelocityRecognition) return 1;
+
+  deltaT = HAL_GetTick() - lastMillis;
+  lastMillis = HAL_GetTick();
+
+  if (deltaT < 5) return 32;
+  if (deltaT < 10) return 16;
+  if (deltaT < 20) return 8;
+  if (deltaT < 40) return 4;
+  if (deltaT < 60) return 2;
   return 1;
 }
 
 void Encoder::refresh(bool clk, bool data){
   a = clk;
   b = data;
+  uint8_t velocity = 1;
 
   if (!pa && a) {
+	  velocity = calculateVelocity();
       data ? OnChange(Increment, 0) : OnChange(Decrement, 0);
-      data ? counter++ : counter--;
+      data ? counter+=velocity : counter-=velocity;
   }
-/*
-  if (!pa && a) currentState = ClkRising;
-  if (pa && !a) currentState = ClkFalling;
-  if (!pb && b){
-	  currentState = DataRising;
-	  if (previousState == ClkRising){
-		  OnChange(Increment, calculateVelocity());
-	  }
-	  else{
-		  OnChange(Decrement, calculateVelocity());
-	  }
+  if (pa && !a) {
+	  velocity = calculateVelocity();
+		!data ? OnChange(Increment, 0) : OnChange(Decrement, 0);
+		!data ? counter+=velocity : counter-=velocity;
   }
-  if (pb && !b) {
-	  currentState = DataFalling;
-	  if (previousState == ClkFalling){
-		  OnChange(Increment, calculateVelocity());
-	  }
-	  else{
-		  OnChange(Decrement, calculateVelocity());
-	  }
-  }
-
-*/
 
   if (counter < lowerConstrain) {
     if (allowRollover)
@@ -78,8 +70,6 @@ void Encoder::refresh(bool clk, bool data){
 
   pa = a;
   pb = b;
-
-  previousState = currentState;
 }
 
 int32_t Encoder::getCounter(){

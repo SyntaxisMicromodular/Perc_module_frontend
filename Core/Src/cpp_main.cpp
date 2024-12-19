@@ -29,7 +29,7 @@ Encoder enc4;
 
 char stringstate[17] = "0000000000000000";
 bool state[16];
-char msg[20] = "";
+char msg[10] = "";
 uint8_t currentReadChannel = 0;
 bool readState = false;
 
@@ -74,8 +74,7 @@ void drawScreen(){
 			SSD1306_SetOLED(&oled1);
 			SSD1306_Clear(BLACK);
 			GFX_SetFontSize(1);
-			GFX_DrawString(0,3, stringstate, WHITE, BLACK);
-			GFX_DrawString(0,11, msg, WHITE, BLACK);
+			GFX_DrawString(0,3, msg, WHITE, BLACK);
 			SSD1306_Display();
 
 
@@ -107,56 +106,46 @@ void writeAddress(uint8_t channel){
 	HAL_GPIO_WritePin(MUX_D_GPIO_Port, MUX_D_Pin, (GPIO_PinState)bitRead(channel, 3));
 }
 
-void readInputState(uint8_t channel){
-	state[channel] = (HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
-
-#define showpins
-#ifdef showpins
-	if(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin)){
-		stringstate[channel] = '1';
-	}
-	else{
-		stringstate[channel] = '0';
-	}
-#endif
-}
-
 void enc1Callback(EncoderDirection dir, uint8_t velocity){
 	if (dir == Decrement){
-		strncpy(msg, "enc1--", 20);
+		strncpy(msg, "enc1--\n", 10);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
 	}
 	if (dir == Increment){
-		strncpy(msg, "enc1++", 20);
+		strncpy(msg, "enc1++\n", 10);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
 	}
+	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
 }
 
 void enc2Callback(EncoderDirection dir, uint8_t velocity){
 	if (dir == Decrement){
-		strncpy(msg, "enc2--", 20);
+		strncpy(msg, "enc2--\n", 10);
 	}
 	if (dir == Increment){
-		strncpy(msg, "enc2++", 20);
+		strncpy(msg, "enc2++\n", 10);
 	}
+	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
 }
 
 void enc3Callback(EncoderDirection dir, uint8_t velocity){
 	if (dir == Decrement){
-		strncpy(msg, "enc3--", 20);
+		strncpy(msg, "enc3--\n", 10);
 	}
 	if (dir == Increment){
-		strncpy(msg, "enc3++", 20);
+		strncpy(msg, "enc3++\n", 10);
 	}
+	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
 }
 
 void enc4Callback(EncoderDirection dir, uint8_t velocity){
 	if (dir == Decrement){
-		strncpy(msg, "enc4--", 20);
+		strncpy(msg, "enc4--\n", 10);
 	}
 	if (dir == Increment){
-		strncpy(msg, "enc4++", 20);
+		strncpy(msg, "enc4++\n", 10);
 	}
+	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
 }
 
 void emptyCallback(EncoderDirection dir, uint8_t velocity){
@@ -164,14 +153,14 @@ void emptyCallback(EncoderDirection dir, uint8_t velocity){
 }
 
 void initializeEncoders(){
-	enc1.setCallback(emptyCallback);
-	enc2.setCallback(emptyCallback);
-	enc3.setCallback(emptyCallback);
-	enc4.setCallback(emptyCallback);
-	enc1.setConstrains(0, 256);
-	enc2.setConstrains(0, 256);
-	enc3.setConstrains(0, 256);
-	enc4.setConstrains(0, 256);
+	enc1.setCallback(enc1Callback);
+	enc2.setCallback(enc2Callback);
+	enc3.setCallback(enc3Callback);
+	enc4.setCallback(enc4Callback);
+	enc1.setConstrains(0, 1023);
+	enc2.setConstrains(0, 1023);
+	enc3.setConstrains(0, 1023);
+	enc4.setConstrains(0, 1023);
 	enc1.setCounter(1);
 	enc2.setCounter(1);
 	enc3.setCounter(1);
@@ -189,14 +178,16 @@ void Timer6Interrupt(){
 		readState = true;
 	}
 	if(readState){
-		readInputState(currentReadChannel);
+		switch (currentReadChannel){
+		case 0: enc1.refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET); break;
+		case 1: enc2.refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET); break;
+		case 2: enc3.refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET); break;
+		case 3: enc4.refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET); break;
+		default: break;
+		}
 		++currentReadChannel;
-		if (currentReadChannel == 17){
+		if (currentReadChannel == 4){
 			currentReadChannel = 0;
-			enc1.refresh(state[0], state[1]);
-			enc2.refresh(state[3], state[4]);
-			enc3.refresh(state[6], state[7]);
-			//enc4.refresh(state[9], state[10]);
 		}
 		readState = false;
 	}
@@ -204,8 +195,8 @@ void Timer6Interrupt(){
 
 void UART_received(char* buf, uint16_t size){
 	char emptymsg[20] = "";
-	strncpy(msg, emptymsg, 20);
-	strncpy(msg, buf, size > 20 ? 20 : size - 2);
+	strncpy(msg, emptymsg, 10);
+	strncpy(msg, buf, size > 10 ? 10 : size - 2);
 }
 
 void loop(){

@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include "stm32l4xx_hal.h"
 
 //klasa dla uproszczonej obsługi enkodera
 
@@ -22,6 +23,7 @@ public:
   void setIncrementValue(int32_t val);
   void setConstrains(int32_t low, int32_t up);
   void setRollover(bool input);
+  void setVelocityRecognition(bool input);
   void refresh(bool clk, bool data);
   int32_t getCounter();
   void setCounter(int32_t value);
@@ -37,6 +39,7 @@ private:
   bool pa = false, pb = false;
   bool change = false;
   bool allowRollover = false;
+  bool allowVelocityRecognition = true;
   EncoderState currentState = ClkRising;
   EncoderState previousState = ClkRising;
   int32_t counter = 0;
