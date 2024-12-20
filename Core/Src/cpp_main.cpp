@@ -21,6 +21,8 @@
 
 struct OLEDdefinition oled1;
 struct OLEDdefinition oled2;
+struct OLEDdefinition oled3;
+struct OLEDdefinition oled4;
 
 Encoder enc1;
 Encoder enc2;
@@ -40,7 +42,15 @@ void initializeOLEDs(){
 
 	oled2.PortCS = SSD1306_CS2_GPIO_Port;
 	oled2.PinCS = SSD1306_CS2_Pin;
-	oled2.rotation_90 = true;
+	oled2.rotation_90 = false;
+
+	oled3.PortCS = SSD1306_CS3_GPIO_Port;
+	oled3.PinCS = SSD1306_CS3_Pin;
+	oled3.rotation_90 = false;
+
+	oled4.PortCS = SSD1306_CS4_GPIO_Port;
+	oled4.PinCS = SSD1306_CS4_Pin;
+	oled4.rotation_90 = false;
 
 	GFX_SetFont(font_8x5);
 	GFX_SetFontSize(1);
@@ -51,7 +61,6 @@ void initializeOLEDs(){
 	SSD1306_SpiInit(&hspi1);
 	SSD1306_RotateDisplay(1);
 	SSD1306_Clear(BLACK);
-	GFX_DrawString(0,3, "pierwszy", WHITE, BLACK);
 	SSD1306_Display();
 
 	while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
@@ -59,44 +68,70 @@ void initializeOLEDs(){
 	SSD1306_SetOLED(&oled2);
 	SSD1306_SpiInit(&hspi1);
 	SSD1306_RotateDisplay(1);
-	SSD1306_Clear(WHITE);
-	GFX_DrawString(0,3, "drugi", WHITE, BLACK);
+	SSD1306_Clear(BLACK);
 	SSD1306_Display();
 
-	SSD1306_SetOLED(&oled1);
+	while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
+
+	SSD1306_SetOLED(&oled3);
+	SSD1306_SpiInit(&hspi1);
+	SSD1306_RotateDisplay(1);
+	SSD1306_Clear(BLACK);
+	SSD1306_Display();
 
 	while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
+
+	SSD1306_SetOLED(&oled4);
+	SSD1306_SpiInit(&hspi1);
+	SSD1306_RotateDisplay(1);
+	SSD1306_Clear(BLACK);
+	SSD1306_Display();
+
+	while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
+
+	SSD1306_SetOLED(&oled1);
 }
 
 void drawScreen(){
+	char tmp[20] = "";
 	if(hspi1.hdmatx->State == HAL_DMA_STATE_READY)
-		{
-			SSD1306_SetOLED(&oled1);
-			SSD1306_Clear(BLACK);
-			GFX_SetFontSize(1);
-			GFX_DrawString(0,3, msg, WHITE, BLACK);
-			SSD1306_Display();
+	{
+		SSD1306_SetOLED(&oled1);
+		SSD1306_Clear(BLACK);
+		GFX_SetFontSize(2);
+		sprintf(tmp, "A = %d", enc1.getCounter());
+		GFX_DrawString(0,3, tmp, WHITE, BLACK);
+		SSD1306_Display();
 
+		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-			while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
+		SSD1306_SetOLED(&oled2);
+		SSD1306_Clear(BLACK);
+		GFX_SetFontSize(2);
+		sprintf(tmp, "D = %d", enc2.getCounter());
+		GFX_DrawString(0,3, tmp, WHITE, BLACK);
+		SSD1306_Display();
 
+		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-			SSD1306_SetOLED(&oled2);
-			SSD1306_Clear(BLACK);
-			GFX_SetFontSize(1);
-			char tmp[20] = "";
-			sprintf(tmp, "Enc1 = %d", enc1.getCounter());
-			GFX_DrawString(0,3, tmp, WHITE, BLACK);
-			sprintf(tmp, "Enc2 = %d", enc2.getCounter());
-			GFX_DrawString(0,11, tmp, WHITE, BLACK);
-			sprintf(tmp, "Enc3 = %d", enc3.getCounter());
-			GFX_DrawString(0,19, tmp, WHITE, BLACK);
-			sprintf(tmp, "Enc4 = %d", enc4.getCounter());
-			GFX_DrawString(0,27, tmp, WHITE, BLACK);
-			SSD1306_Display();
+		SSD1306_SetOLED(&oled3);
+		SSD1306_Clear(BLACK);
+		GFX_SetFontSize(2);
+		sprintf(tmp, "S = %d", enc3.getCounter());
+		GFX_DrawString(0,3, tmp, WHITE, BLACK);
+		SSD1306_Display();
 
-			while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
-		}
+		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
+
+		SSD1306_SetOLED(&oled4);
+		SSD1306_Clear(BLACK);
+		GFX_SetFontSize(2);
+		sprintf(tmp, "R = %d", enc4.getCounter());
+		GFX_DrawString(0,3, tmp, WHITE, BLACK);
+		SSD1306_Display();
+
+		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
+	}
 }
 
 void writeAddress(uint8_t channel){
