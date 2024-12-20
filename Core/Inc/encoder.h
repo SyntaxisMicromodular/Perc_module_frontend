@@ -21,6 +21,7 @@ enum EncoderState{
 class Encoder{
 public:
   void setIncrementValue(int32_t val);
+  void setMaximumVelocityIncrement(uint8_t val);
   void setConstrains(int32_t low, int32_t up);
   void setRollover(bool input);
   void setVelocityRecognition(bool input);
@@ -48,6 +49,7 @@ private:
   int32_t upperConstrain = 255;
   uint32_t lastMillis = 0;
   uint32_t deltaT = 0;
+  uint8_t maxinc = 32;
 };
 
 #endif

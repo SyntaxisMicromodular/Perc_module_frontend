@@ -4,6 +4,10 @@ void Encoder::setIncrementValue(int32_t val){
   incValue = val;
 }
 
+void Encoder::setMaximumVelocityIncrement(uint8_t val){
+	maxinc = val;
+}
+
 void Encoder::setConstrains(int32_t low, int32_t up){
   lowerConstrain = low;
   upperConstrain = up;
@@ -23,12 +27,9 @@ uint8_t Encoder::calculateVelocity(){
   deltaT = HAL_GetTick() - lastMillis;
   lastMillis = HAL_GetTick();
 
-  if (deltaT < 5) return 32;
-  if (deltaT < 10) return 16;
-  if (deltaT < 20) return 8;
-  if (deltaT < 40) return 4;
-  if (deltaT < 60) return 2;
-  return 1;
+  if (deltaT > 60) return 1;
+  else if (deltaT < 5)  return maxinc;
+  else return (-0.018 * deltaT + 1.091) * maxinc + 1;
 }
 
 void Encoder::refresh(bool clk, bool data){

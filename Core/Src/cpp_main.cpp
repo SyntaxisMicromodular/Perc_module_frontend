@@ -19,15 +19,8 @@
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
-struct OLEDdefinition oled1;
-struct OLEDdefinition oled2;
-struct OLEDdefinition oled3;
-struct OLEDdefinition oled4;
-
-Encoder enc1;
-Encoder enc2;
-Encoder enc3;
-Encoder enc4;
+struct OLEDdefinition oled[4];
+Encoder enc[4];
 
 char stringstate[17] = "0000000000000000";
 bool state[16];
@@ -36,28 +29,28 @@ uint8_t currentReadChannel = 0;
 bool readState = false;
 
 void initializeOLEDs(){
-	oled1.PortCS = SSD1306_CS_GPIO_Port;
-	oled1.PinCS = SSD1306_CS_Pin;
-	oled1.rotation_90 = false;
+	oled[0].PortCS = SSD1306_CS_GPIO_Port;
+	oled[0].PinCS = SSD1306_CS_Pin;
+	oled[0].rotation_90 = false;
 
-	oled2.PortCS = SSD1306_CS2_GPIO_Port;
-	oled2.PinCS = SSD1306_CS2_Pin;
-	oled2.rotation_90 = false;
+	oled[1].PortCS = SSD1306_CS2_GPIO_Port;
+	oled[1].PinCS = SSD1306_CS2_Pin;
+	oled[1].rotation_90 = false;
 
-	oled3.PortCS = SSD1306_CS3_GPIO_Port;
-	oled3.PinCS = SSD1306_CS3_Pin;
-	oled3.rotation_90 = false;
+	oled[2].PortCS = SSD1306_CS3_GPIO_Port;
+	oled[2].PinCS = SSD1306_CS3_Pin;
+	oled[2].rotation_90 = false;
 
-	oled4.PortCS = SSD1306_CS4_GPIO_Port;
-	oled4.PinCS = SSD1306_CS4_Pin;
-	oled4.rotation_90 = false;
+	oled[3].PortCS = SSD1306_CS4_GPIO_Port;
+	oled[3].PinCS = SSD1306_CS4_Pin;
+	oled[3].rotation_90 = false;
 
 	GFX_SetFont(font_8x5);
 	GFX_SetFontSize(1);
 
 	SSD1306_ResetOLEDS();
 
-	SSD1306_SetOLED(&oled1);
+	SSD1306_SetOLED(&oled[0]);
 	SSD1306_SpiInit(&hspi1);
 	SSD1306_RotateDisplay(1);
 	SSD1306_Clear(BLACK);
@@ -65,7 +58,7 @@ void initializeOLEDs(){
 
 	while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-	SSD1306_SetOLED(&oled2);
+	SSD1306_SetOLED(&oled[1]);
 	SSD1306_SpiInit(&hspi1);
 	SSD1306_RotateDisplay(1);
 	SSD1306_Clear(BLACK);
@@ -73,7 +66,7 @@ void initializeOLEDs(){
 
 	while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-	SSD1306_SetOLED(&oled3);
+	SSD1306_SetOLED(&oled[2]);
 	SSD1306_SpiInit(&hspi1);
 	SSD1306_RotateDisplay(1);
 	SSD1306_Clear(BLACK);
@@ -81,7 +74,7 @@ void initializeOLEDs(){
 
 	while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-	SSD1306_SetOLED(&oled4);
+	SSD1306_SetOLED(&oled[3]);
 	SSD1306_SpiInit(&hspi1);
 	SSD1306_RotateDisplay(1);
 	SSD1306_Clear(BLACK);
@@ -89,44 +82,44 @@ void initializeOLEDs(){
 
 	while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-	SSD1306_SetOLED(&oled1);
+	SSD1306_SetOLED(&oled[0]);
 }
 
 void drawScreen(){
 	char tmp[20] = "";
 	if(hspi1.hdmatx->State == HAL_DMA_STATE_READY)
 	{
-		SSD1306_SetOLED(&oled1);
+		SSD1306_SetOLED(&oled[0]);
 		SSD1306_Clear(BLACK);
 		GFX_SetFontSize(2);
-		sprintf(tmp, "A = %d", enc1.getCounter());
+		sprintf(tmp, "A = %d", enc[0].getCounter());
 		GFX_DrawString(0,3, tmp, WHITE, BLACK);
 		SSD1306_Display();
 
 		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-		SSD1306_SetOLED(&oled2);
+		SSD1306_SetOLED(&oled[1]);
 		SSD1306_Clear(BLACK);
 		GFX_SetFontSize(2);
-		sprintf(tmp, "D = %d", enc2.getCounter());
+		sprintf(tmp, "D = %d", enc[1].getCounter());
 		GFX_DrawString(0,3, tmp, WHITE, BLACK);
 		SSD1306_Display();
 
 		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-		SSD1306_SetOLED(&oled3);
+		SSD1306_SetOLED(&oled[2]);
 		SSD1306_Clear(BLACK);
 		GFX_SetFontSize(2);
-		sprintf(tmp, "S = %d", enc3.getCounter());
+		sprintf(tmp, "S = %d", enc[2].getCounter());
 		GFX_DrawString(0,3, tmp, WHITE, BLACK);
 		SSD1306_Display();
 
 		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 
-		SSD1306_SetOLED(&oled4);
+		SSD1306_SetOLED(&oled[3]);
 		SSD1306_Clear(BLACK);
 		GFX_SetFontSize(2);
-		sprintf(tmp, "R = %d", enc4.getCounter());
+		sprintf(tmp, "R = %d", enc[3].getCounter());
 		GFX_DrawString(0,3, tmp, WHITE, BLACK);
 		SSD1306_Display();
 
@@ -141,44 +134,44 @@ void writeAddress(uint8_t channel){
 	HAL_GPIO_WritePin(MUX_D_GPIO_Port, MUX_D_Pin, (GPIO_PinState)bitRead(channel, 3));
 }
 
-void enc1Callback(EncoderDirection dir, uint8_t velocity){
+void enc0Callback(EncoderDirection dir, uint8_t velocity){
 	if (dir == Decrement){
-		strncpy(msg, "enc1--\n", 10);
+		strncpy(msg, "enc[0]--\n", 10);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
 	}
 	if (dir == Increment){
-		strncpy(msg, "enc1++\n", 10);
+		strncpy(msg, "enc[0]++\n", 10);
 		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+	}
+	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
+}
+
+void enc1Callback(EncoderDirection dir, uint8_t velocity){
+	if (dir == Decrement){
+		strncpy(msg, "enc[1]--\n", 10);
+	}
+	if (dir == Increment){
+		strncpy(msg, "enc[1]++\n", 10);
 	}
 	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
 }
 
 void enc2Callback(EncoderDirection dir, uint8_t velocity){
 	if (dir == Decrement){
-		strncpy(msg, "enc2--\n", 10);
+		strncpy(msg, "enc[2]--\n", 10);
 	}
 	if (dir == Increment){
-		strncpy(msg, "enc2++\n", 10);
+		strncpy(msg, "enc[2]++\n", 10);
 	}
 	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
 }
 
 void enc3Callback(EncoderDirection dir, uint8_t velocity){
 	if (dir == Decrement){
-		strncpy(msg, "enc3--\n", 10);
+		strncpy(msg, "enc[3]--\n", 10);
 	}
 	if (dir == Increment){
-		strncpy(msg, "enc3++\n", 10);
-	}
-	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
-}
-
-void enc4Callback(EncoderDirection dir, uint8_t velocity){
-	if (dir == Decrement){
-		strncpy(msg, "enc4--\n", 10);
-	}
-	if (dir == Increment){
-		strncpy(msg, "enc4++\n", 10);
+		strncpy(msg, "enc[3]++\n", 10);
 	}
 	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)msg, sizeof(msg));
 }
@@ -188,18 +181,27 @@ void emptyCallback(EncoderDirection dir, uint8_t velocity){
 }
 
 void initializeEncoders(){
-	enc1.setCallback(enc1Callback);
-	enc2.setCallback(enc2Callback);
-	enc3.setCallback(enc3Callback);
-	enc4.setCallback(enc4Callback);
-	enc1.setConstrains(0, 1023);
-	enc2.setConstrains(0, 1023);
-	enc3.setConstrains(0, 1023);
-	enc4.setConstrains(0, 1023);
-	enc1.setCounter(1);
-	enc2.setCounter(1);
-	enc3.setCounter(1);
-	enc4.setCounter(1);
+	enc[0].setCallback(enc0Callback);
+	enc[1].setCallback(enc1Callback);
+	enc[2].setCallback(enc2Callback);
+	enc[3].setCallback(enc3Callback);
+	enc[0].setConstrains(0, 1023);
+	enc[1].setConstrains(0, 1023);
+	enc[2].setConstrains(0, 1023);
+	enc[3].setConstrains(0, 1023);
+	for (uint8_t i = 0; i < 4; i++){	//first scan to avoid "ghost rotations" before setting initial values
+		writeAddress(i);
+		HAL_Delay(1);
+		enc[i].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
+	}
+	enc[0].setCounter(1);
+	enc[1].setCounter(12);
+	enc[2].setCounter(123);
+	enc[3].setCounter(256);
+	enc[0].setMaximumVelocityIncrement(64);
+	enc[1].setMaximumVelocityIncrement(32);
+	enc[2].setMaximumVelocityIncrement(16);
+	enc[3].setMaximumVelocityIncrement(8);
 }
 
 void setup(){
@@ -213,13 +215,7 @@ void Timer6Interrupt(){
 		readState = true;
 	}
 	if(readState){
-		switch (currentReadChannel){
-		case 0: enc1.refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET); break;
-		case 1: enc2.refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET); break;
-		case 2: enc3.refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET); break;
-		case 3: enc4.refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET); break;
-		default: break;
-		}
+		enc[currentReadChannel].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
 		++currentReadChannel;
 		if (currentReadChannel == 4){
 			currentReadChannel = 0;
