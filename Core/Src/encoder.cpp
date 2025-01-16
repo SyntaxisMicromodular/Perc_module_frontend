@@ -39,12 +39,12 @@ void Encoder::refresh(bool clk, bool data){
 
   if (!pa && a) {
 	  velocity = calculateVelocity();
-      data ? OnChange(Increment, 0) : OnChange(Decrement, 0);
+      data ? OnChange(Increment, velocity) : OnChange(Decrement, velocity);
       data ? counter+=velocity : counter-=velocity;
   }
   if (pa && !a) {
 	  velocity = calculateVelocity();
-		!data ? OnChange(Increment, 0) : OnChange(Decrement, 0);
+		!data ? OnChange(Increment, velocity) : OnChange(Decrement, velocity);
 		!data ? counter+=velocity : counter-=velocity;
   }
 
