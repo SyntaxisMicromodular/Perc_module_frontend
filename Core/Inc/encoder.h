@@ -26,19 +26,18 @@ public:
   void setRollover(bool input);
   void setVelocityRecognition(bool input);
   void refresh(bool clk, bool data);
+  void execute();
   int32_t getCounter();
   void setCounter(int32_t value);
-  bool isChange();
   void resetChange();
   void setCallback(void(*funcpointer)(EncoderDirection dir, uint8_t velocity));
 
 private:
-  void (*OnChange)(EncoderDirection, uint8_t);
+  void (*OnChange)(EncoderDirection, uint8_t) = NULL;
   uint8_t calculateVelocity();
   int pin1, pin2;
   bool a = false, b = false;
   bool pa = false, pb = false;
-  bool change = false;
   bool allowRollover = false;
   bool allowVelocityRecognition = true;
   EncoderState currentState = ClkRising;

@@ -49,7 +49,8 @@
 
 /* USER CODE BEGIN PV */
 #define buffersize 255
-uint8_t uartbuffer[buffersize] = {0};
+uint8_t uartbuffer1[buffersize] = {0};
+uint8_t uartbuffer2[buffersize] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,7 +100,8 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   setup();
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer, buffersize);
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, uartbuffer1, buffersize);
+  HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer2, buffersize);
   if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
   {
 	/* Starting Error */
@@ -186,14 +188,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-    // Check if UART2 trigger the Callback
-    if(huart->Instance == USART2)
+    if(huart->Instance == USART1)		//robimy to samo co przy UART2 (to do kompa), ale bez retransmisji bo i po co?
     {
-    	UART_received(&uartbuffer, Size);
-    	HAL_UART_Transmit_DMA(&huart2, uartbuffer, Size);
+    	UART_received(&uartbuffer1, Size);
+    	//HAL_UART_Transmit_DMA(&huart2, uartbuffer2, Size);
         // Start to listening again - IMPORTANT!
-        HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer, buffersize);
+        HAL_UARTEx_ReceiveToIdle_DMA(&huart1, uartbuffer1, buffersize);
     }
+    if(huart->Instance == USART2)
+	{
+		UART_received(&uartbuffer2, Size);
+		HAL_UART_Transmit_DMA(&huart2, uartbuffer2, Size);
+		// Start to listening again - IMPORTANT!
+		HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer2, buffersize);
+	}
 }
 /* USER CODE END 4 */
 

@@ -12,7 +12,6 @@
 #include "fonts/fonts.h"
 #include "encoder.h"
 #include <math.h>
-#include <string>
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define bitSet(value, bit) ((value) |= (1UL << (bit)))
@@ -22,8 +21,18 @@
 struct OLEDdefinition oled[4];
 Encoder enc[4];
 
-std::string caption[4];
-std::string value[4];
+#define CAPTION_LENGTH 20
+#define VALUE_LENGTH 5
+
+char caption0[CAPTION_LENGTH];
+char caption1[CAPTION_LENGTH];
+char caption2[CAPTION_LENGTH];
+char caption3[CAPTION_LENGTH];
+
+char value0[VALUE_LENGTH];
+char value1[VALUE_LENGTH];
+char value2[VALUE_LENGTH];
+char value3[VALUE_LENGTH];
 
 char stringstate[17] = "0000000000000000";
 bool state[16];
@@ -48,10 +57,15 @@ void initializeOLEDs(){
 	oled[3].PinCS = SSD1306_CS4_Pin;
 	oled[3].rotation_90 = false;
 
-	for (uint8_t i = 0; i < 4; i++){
-		caption[i] = "Test ";// + std::to_string(i);
-		value[i] = "123";
-	}
+	sprintf(caption0, "Test 0");
+	sprintf(caption1, "Test 1");
+	sprintf(caption2, "Test 2");
+	sprintf(caption3, "Test 3");
+
+	sprintf(value0, "123");
+	sprintf(value1, "456");
+	sprintf(value2, "789");
+	sprintf(value3, "012");
 
 	GFX_SetFont(font_8x5);
 	GFX_SetFontSize(1);
@@ -97,19 +111,33 @@ void drawScreen(uint8_t screenNumber){
 	while (hspi1.hdmatx->State != HAL_DMA_STATE_READY) {}
 	if(hspi1.hdmatx->State == HAL_DMA_STATE_READY)
 	{
+		char caption[CAPTION_LENGTH];
+		char value[VALUE_LENGTH];
+		switch (screenNumber){
+			case 0:
+				strcpy(caption, caption0);
+				strcpy(value, value0);
+				break;
+			case 1:
+				strcpy(caption, caption1);
+				strcpy(value, value1);
+				break;
+			case 2:
+				strcpy(caption, caption2);
+				strcpy(value, value2);
+				break;
+			case 3:
+				strcpy(caption, caption3);
+				strcpy(value, value3);
+				break;
+		}
 		SSD1306_SetOLED(&oled[screenNumber]);
 		SSD1306_Clear(BLACK);
 		GFX_SetFontSize(2);
-		char* cstr = new char [caption[screenNumber].length()+1];
-		strcpy(cstr, caption[screenNumber].c_str());
-		GFX_DrawString(0,0, cstr, WHITE, BLACK);
+		GFX_DrawString(0,0, caption, WHITE, BLACK);
 		GFX_SetFontSize(3);
-		cstr = new char [value[screenNumber].length()+1];
-		strcpy(cstr, value[screenNumber].c_str());
-		GFX_DrawString(0, 20, cstr, WHITE, BLACK);
+		GFX_DrawString(0, 20, value, WHITE, BLACK);
 		SSD1306_Display();
-		cstr = NULL;
-		delete cstr;
 	}
 }
 
@@ -121,21 +149,12 @@ void writeAddress(uint8_t channel){
 }
 
 void sendEncoderData(uint8_t encoderNumber, EncoderDirection dir, uint8_t velocity){
-	/*std::string toSend = "E";
-	switch(encoderNumber){
-		case 0: toSend += "0"; break;
-		case 1: toSend += "1"; break;
-		case 2: toSend += "2"; break;
-		case 3: toSend += "3"; break;
-	}
-	if (dir == Increment) toSend += "+";
-	if (dir == Decrement) toSend += "-";
-	//toSend += std::to_string(velocity);
-	char* cstr = new char [toSend.length()+1];
-	strcpy(cstr, toSend.c_str());*/
-	//char tmp[10] = "";
-	//sprintf(tmp, "E%d%d", encoderNumber, velocity);
-	//HAL_UART_Transmit_DMA(&huart2, (uint8_t*)tmp, sizeof(tmp));
+	char tmp[10] = "";
+	char sign = '+';
+	if (dir == Decrement) sign = '-';
+	sprintf(tmp, "E%d%c%d\r\n", encoderNumber, sign, velocity);
+	HAL_UART_Transmit_DMA(&huart1, (uint8_t*)tmp, sizeof(tmp));
+	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)tmp, sizeof(tmp));
 }
 
 void enc0Callback(EncoderDirection dir, uint8_t velocity){
@@ -154,10 +173,6 @@ void enc3Callback(EncoderDirection dir, uint8_t velocity){
 	sendEncoderData(3, dir, velocity);
 }
 
-void emptyCallback(EncoderDirection dir, uint8_t velocity){
-
-}
-
 void initializeEncoders(){
 	enc[0].setConstrains(0, 1023);
 	enc[1].setConstrains(0, 1023);
@@ -168,6 +183,7 @@ void initializeEncoders(){
 		HAL_Delay(1);
 		enc[i].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
 	}
+
 	enc[0].setCallback(enc0Callback);
 	enc[1].setCallback(enc1Callback);
 	enc[2].setCallback(enc2Callback);
@@ -183,8 +199,8 @@ void initializeEncoders(){
 }
 
 void setup(){
+	initializeEncoders();
 	initializeOLEDs();
-	//initializeEncoders();
 	for (uint8_t i = 0; i < 4; i++){
 		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
 		drawScreen(i);
@@ -192,13 +208,13 @@ void setup(){
 }
 
 void Timer6Interrupt(){
-	return;
 	if (!readState){
 		writeAddress(currentReadChannel);
 		readState = true;
 	}
 	if(readState){
 		enc[currentReadChannel].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
+		enc[currentReadChannel].execute();
 		++currentReadChannel;
 		if (currentReadChannel == 4){
 			currentReadChannel = 0;
@@ -216,15 +232,27 @@ void UART_received(char* buf, uint16_t size){
 	if(buf[1] == '2') selectedDisplay = 2;
 	if(buf[1] == '3') selectedDisplay = 3;
 
-	std::string received = "";
-
-	for (int i = 2; i < size - 1; i++) received += buf[i];
-
 	if (valuenotcaption){
-		value[selectedDisplay] = received;
+		char value[VALUE_LENGTH];
+		for (int i = 0; i < VALUE_LENGTH; i++) value[i] = ' ';
+		for (int i = 0; i < size + 1 && i < VALUE_LENGTH ; i++) value[i] = buf[i+2];
+		switch (selectedDisplay){
+			case 0: strcpy(value0, value); break;
+			case 1: strcpy(value1, value); break;
+			case 2: strcpy(value2, value); break;
+			case 3: strcpy(value3, value); break;
+		}
 	}
-	else{
-		caption[selectedDisplay] = received;
+	if (!valuenotcaption){
+		char caption[CAPTION_LENGTH];
+		for (int i = 0; i < CAPTION_LENGTH; i++) caption[i] = ' ';
+		for (int i = 0; i < size + 1 && i < CAPTION_LENGTH ; i++) caption[i] = buf[i+2];
+		switch (selectedDisplay){
+			case 0: strcpy(caption0, caption); break;
+			case 1: strcpy(caption1, caption); break;
+			case 2: strcpy(caption2, caption); break;
+			case 3: strcpy(caption3, caption); break;
+		}
 	}
 	drawScreen(selectedDisplay);
 }

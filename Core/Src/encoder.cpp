@@ -35,38 +35,40 @@ uint8_t Encoder::calculateVelocity(){
 void Encoder::refresh(bool clk, bool data){
   a = clk;
   b = data;
-  uint8_t velocity = 1;
+}
 
+void Encoder::execute(){
+  uint8_t velocity = 1;
   if (!pa && a) {
 	  velocity = calculateVelocity();
-      data ? OnChange(Increment, velocity) : OnChange(Decrement, velocity);
-      data ? counter+=velocity : counter-=velocity;
+	  a ? OnChange(Increment, velocity) : OnChange(Decrement, velocity);
+	  a ? counter+=velocity : counter-=velocity;
   }
   if (pa && !a) {
 	  velocity = calculateVelocity();
-		!data ? OnChange(Increment, velocity) : OnChange(Decrement, velocity);
-		!data ? counter+=velocity : counter-=velocity;
+	  !a ? OnChange(Increment, velocity) : OnChange(Decrement, velocity);
+	  !a ? counter+=velocity : counter-=velocity;
   }
 
   if (counter < lowerConstrain) {
-    if (allowRollover)
-    {
-      counter = upperConstrain;
-    }
-    else
-    {
-      counter = lowerConstrain;
-    }
+	if (allowRollover)
+	{
+	  counter = upperConstrain;
+	}
+	else
+	{
+	  counter = lowerConstrain;
+	}
   }
   if (counter > upperConstrain) {
-    if (allowRollover)
-    {
-      counter = lowerConstrain;
-    }
-    else
-    {
-      counter = upperConstrain;
-    }
+	if (allowRollover)
+	{
+	  counter = lowerConstrain;
+	}
+	else
+	{
+	  counter = upperConstrain;
+	}
   }
 
   pa = a;
@@ -87,14 +89,6 @@ void Encoder::setCounter(int32_t value){
         return;
     }
     counter = value;
-}
-
-bool Encoder::isChange(){
-  if (change){
-    change = false;
-    return true;
-  }
-  return false;
 }
 
 void Encoder::setCallback(void(*funcpointer)(EncoderDirection, uint8_t)){
