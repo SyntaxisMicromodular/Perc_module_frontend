@@ -1,0 +1,16 @@
+../Core/Inc/encoder.h:21:7:Encoder::Encoder()	16	static
+../Core/Src/cpp_main.cpp:43:6:void initializeOLEDs()	8	static
+../Core/Src/cpp_main.cpp:110:6:void drawScreen(uint8_t)	56	static
+../Core/Src/cpp_main.cpp:144:6:void writeAddress(uint8_t)	16	static
+../Core/Src/cpp_main.cpp:151:6:void sendEncoderData(uint8_t, EncoderDirection, uint8_t)	40	static
+../Core/Src/cpp_main.cpp:160:6:void enc0Callback(EncoderDirection, uint8_t)	16	static
+../Core/Src/cpp_main.cpp:164:6:void enc1Callback(EncoderDirection, uint8_t)	16	static
+../Core/Src/cpp_main.cpp:168:6:void enc2Callback(EncoderDirection, uint8_t)	16	static
+../Core/Src/cpp_main.cpp:172:6:void enc3Callback(EncoderDirection, uint8_t)	16	static
+../Core/Src/cpp_main.cpp:176:6:void initializeEncoders()	24	static
+../Core/Src/cpp_main.cpp:201:6:void setup()	16	static
+../Core/Src/cpp_main.cpp:210:6:void Timer6Interrupt()	16	static
+../Core/Src/cpp_main.cpp:226:6:void UART_received(char*, uint16_t)	64	static
+../Core/Src/cpp_main.cpp:259:6:void loop()	8	static
+../Core/Src/cpp_main.cpp:265:1:void __static_initialization_and_destruction_0(int, int)	24	static
+../Core/Src/cpp_main.cpp:265:1:cpp)	8	static

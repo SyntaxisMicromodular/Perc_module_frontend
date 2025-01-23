@@ -254,9 +254,12 @@ void UART_received(char* buf, uint16_t size){
 			case 3: strcpy(caption3, caption); break;
 		}
 	}
-	drawScreen(selectedDisplay);
 }
 
 void loop(){
-
+	drawScreen(0);
+	drawScreen(1);
+	drawScreen(2);
+	drawScreen(3);
+	HAL_Delay(20);
 }

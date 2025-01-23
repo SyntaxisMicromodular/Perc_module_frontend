@@ -188,14 +188,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-    if(huart->Instance == USART1)		//robimy to samo co przy UART2 (to do kompa), ale bez retransmisji bo i po co?
+    if(huart == &huart1)		//robimy to samo co przy UART2 (to do kompa), ale bez retransmisji bo i po co?
     {
     	UART_received(&uartbuffer1, Size);
     	//HAL_UART_Transmit_DMA(&huart2, uartbuffer2, Size);
         // Start to listening again - IMPORTANT!
         HAL_UARTEx_ReceiveToIdle_DMA(&huart1, uartbuffer1, buffersize);
     }
-    if(huart->Instance == USART2)
+    if(huart == &huart2)
 	{
 		UART_received(&uartbuffer2, Size);
 		HAL_UART_Transmit_DMA(&huart2, uartbuffer2, Size);

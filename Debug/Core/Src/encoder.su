@@ -1,0 +1,11 @@
+../Core/Src/encoder.cpp:3:6:void Encoder::setIncrementValue(int32_t)	16	static
+../Core/Src/encoder.cpp:7:6:void Encoder::setMaximumVelocityIncrement(uint8_t)	16	static
+../Core/Src/encoder.cpp:11:6:void Encoder::setConstrains(int32_t, int32_t)	24	static
+../Core/Src/encoder.cpp:16:6:void Encoder::setRollover(bool)	16	static
+../Core/Src/encoder.cpp:20:6:void Encoder::setVelocityRecognition(bool)	16	static
+../Core/Src/encoder.cpp:24:9:uint8_t Encoder::calculateVelocity()	24	static
+../Core/Src/encoder.cpp:35:6:void Encoder::refresh(bool, bool)	16	static
+../Core/Src/encoder.cpp:40:6:void Encoder::execute()	24	static
+../Core/Src/encoder.cpp:78:9:int32_t Encoder::getCounter()	16	static
+../Core/Src/encoder.cpp:82:6:void Encoder::setCounter(int32_t)	16	static
+../Core/Src/encoder.cpp:94:6:void Encoder::setCallback(void (*)(EncoderDirection, uint8_t))	16	static
