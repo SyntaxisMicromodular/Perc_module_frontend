@@ -203,6 +203,18 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 		HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer2, buffersize);
 	}
 }
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+  /*if (huart->ErrorCode & HAL_UART_ERROR_PE) {
+    // parity error
+  }
+  if (huart->ErrorCode & HAL_UART_ERROR_FE) {
+    // frame error
+  }*/
+  if (huart == &huart1){						//w razie błędu na UART1 po prostu wywołujemy jeszcze raz odbiór na DMA - > "kasujemy" błąd
+	  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, uartbuffer1, buffersize);
+  }
+}
 /* USER CODE END 4 */
 
 /**

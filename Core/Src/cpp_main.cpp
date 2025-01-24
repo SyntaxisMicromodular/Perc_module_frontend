@@ -57,7 +57,7 @@ void initializeOLEDs(){
 	oled[3].PinCS = SSD1306_CS4_Pin;
 	oled[3].rotation_90 = false;
 
-	sprintf(caption0, "Test 0");
+	sprintf(caption0, "TEST 0");
 	sprintf(caption1, "Test 1");
 	sprintf(caption2, "Test 2");
 	sprintf(caption3, "Test 3");
@@ -137,6 +137,7 @@ void drawScreen(uint8_t screenNumber){
 		GFX_DrawString(0,0, caption, WHITE, BLACK);
 		GFX_SetFontSize(3);
 		GFX_DrawString(0, 20, value, WHITE, BLACK);
+		GFX_DrawRectangle(0, 0, 64, 48, WHITE);
 		SSD1306_Display();
 	}
 }
