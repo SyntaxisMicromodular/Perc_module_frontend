@@ -20,35 +20,19 @@ enum EncoderState{
 
 class Encoder{
 public:
-  void setIncrementValue(int32_t val);
-  void setMaximumVelocityIncrement(uint8_t val);
-  void setConstrains(int32_t low, int32_t up);
-  void setRollover(bool input);
-  void setVelocityRecognition(bool input);
   void refresh(bool clk, bool data);
   void execute();
-  int32_t getCounter();
-  void setCounter(int32_t value);
-  void resetChange();
   void setCallback(void(*funcpointer)(EncoderDirection dir, uint8_t velocity));
+  uint8_t maximumVelocityMultiplier = 32;
+  bool allowVelocityRecognition = true;
+  void (*OnChange)(EncoderDirection, uint8_t) = NULL;
 
 private:
-  void (*OnChange)(EncoderDirection, uint8_t) = NULL;
   uint8_t calculateVelocity();
-  int pin1, pin2;
   bool a = false, b = false;
   bool pa = false, pb = false;
-  bool allowRollover = false;
-  bool allowVelocityRecognition = true;
-  EncoderState currentState = ClkRising;
-  EncoderState previousState = ClkRising;
-  int32_t counter = 0;
-  int32_t incValue = 1;
-  int32_t lowerConstrain = 0;
-  int32_t upperConstrain = 255;
   uint32_t lastMillis = 0;
   uint32_t deltaT = 0;
-  uint8_t maxinc = 32;
 };
 
 #endif

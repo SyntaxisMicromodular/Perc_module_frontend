@@ -182,7 +182,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if (htim == &htim6){
-		Timer6Interrupt();
+		EncoderInterrupt();
 	}
 }
 
@@ -190,14 +190,14 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
     if(huart == &huart1)		//robimy to samo co przy UART2 (to do kompa), ale bez retransmisji bo i po co?
     {
-    	UART_received(&uartbuffer1, Size);
+    	messageReceived(&uartbuffer1, Size);
     	//HAL_UART_Transmit_DMA(&huart2, uartbuffer2, Size);
         // Start to listening again - IMPORTANT!
         HAL_UARTEx_ReceiveToIdle_DMA(&huart1, uartbuffer1, buffersize);
     }
     if(huart == &huart2)
 	{
-		UART_received(&uartbuffer2, Size);
+		messageReceived(&uartbuffer2, Size);
 		HAL_UART_Transmit_DMA(&huart2, uartbuffer2, Size);
 		// Start to listening again - IMPORTANT!
 		HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer2, buffersize);
@@ -211,7 +211,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   if (huart->ErrorCode & HAL_UART_ERROR_FE) {
     // frame error
   }*/
-  if (huart == &huart1){						//w razie błędu na UART1 po prostu wywołujemy jeszcze raz odbiór na DMA - > "kasujemy" błąd
+  if (huart == &huart1){						//w razie błędu na UART1 po prostu wywołujemy jeszcze raz odbiór na DMA - > "kasujemy" błąd, mial miejsce błąd nr 8 (overrun error)
 	  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, uartbuffer1, buffersize);
   }
 }

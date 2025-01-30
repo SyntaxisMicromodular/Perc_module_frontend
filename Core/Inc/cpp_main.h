@@ -16,9 +16,9 @@ extern "C"
 
 void setup();
 
-void Timer6Interrupt();
+void EncoderInterrupt();
 
-void UART_received(char* buf, uint16_t size);
+void messageReceived(char* buf, uint16_t size);
 
 void loop();
 
