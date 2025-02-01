@@ -1,5 +1,6 @@
 "./Core/Src/GFX_BW.o"
 "./Core/Src/OLED_SSD1306.o"
+"./Core/Src/button.o"
 "./Core/Src/cpp_main.o"
 "./Core/Src/dma.o"
 "./Core/Src/encoder.o"

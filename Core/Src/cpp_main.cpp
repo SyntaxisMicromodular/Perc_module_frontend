@@ -11,6 +11,7 @@
 #include "GFX_BW.h"
 #include "fonts/fonts.h"
 #include "encoder.h"
+#include "button.h"
 #include <math.h>
 
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
@@ -20,6 +21,7 @@
 
 struct OLEDdefinition oled[4];
 Encoder enc[4];
+Button btn[4];
 
 const int CAPTION_LENGTH = 20;
 const int VALUE_LENGTH = 5;
@@ -97,12 +99,16 @@ void writeAddress(uint8_t channel){
 	HAL_GPIO_WritePin(MUX_D_GPIO_Port, MUX_D_Pin, (GPIO_PinState)bitRead(channel, 3));
 }
 
+void sendData(uint8_t* data, uint16_t size){
+	HAL_UART_Transmit_DMA(&huart1, data, size);
+	HAL_UART_Transmit_DMA(&huart2, data, size);
+}
+
 void sendEncoderData(uint8_t encoderNumber, EncoderDirection dir, uint8_t velocity){
 	char tmp[10] = "";
 	char sign = dir == Increment ? '+' : '-';
 	sprintf(tmp, "E%d%c%d\r\n", encoderNumber, sign, velocity);
-	HAL_UART_Transmit_DMA(&huart1, (uint8_t*)tmp, strlen(tmp));
-	HAL_UART_Transmit_DMA(&huart2, (uint8_t*)tmp, strlen(tmp));
+	sendData((uint8_t*)tmp, strlen(tmp));
 }
 
 void enc0Callback(EncoderDirection dir, uint8_t velocity){
@@ -134,8 +140,46 @@ void initializeEncoders(){
 	enc[3].OnChange = enc3Callback;
 }
 
+void sendButtonData(uint8_t buttonNumber, bool state){
+	char tmp[10] = "";
+	char statechar = state ? '1' : '0';
+	sprintf(tmp, "B%d%c\r\n", buttonNumber, statechar);
+	sendData((uint8_t*)tmp, strlen(tmp));
+}
+
+void btn0Callback(bool state){
+	sendButtonData(0, state);
+}
+
+void btn1Callback(bool state){
+	sendButtonData(1, state);
+}
+
+void btn2Callback(bool state){
+	sendButtonData(2, state);
+}
+
+void btn3Callback(bool state){
+	sendButtonData(3, state);
+}
+
+void initializeButtons(){
+	writeAddress(4);
+	btn[0].refresh(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_RESET);
+	btn[2].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_RESET);
+	writeAddress(5);
+	btn[1].refresh(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_RESET);
+	btn[3].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_RESET);
+
+	btn[0].OnChange = btn0Callback;
+	btn[1].OnChange = btn1Callback;
+	btn[2].OnChange = btn2Callback;
+	btn[3].OnChange = btn3Callback;
+}
+
 void setup(){
 	initializeEncoders();
+	initializeButtons();
 	initializeOLEDs();
 	for (uint8_t i = 0; i < DISPLAYS; i++){
 		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
@@ -157,6 +201,15 @@ void EncoderInterrupt(){
 		}
 		readState = false;
 	}
+
+	writeAddress(4);
+	btn[0].refresh(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_RESET);
+	btn[2].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_RESET);
+	writeAddress(5);
+	btn[1].refresh(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_RESET);
+	btn[3].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_RESET);
+
+	for (uint8_t i = 0; i < 4; i++) btn[i].execute();
 }
 
 void messageReceived(char* buf, uint16_t size){

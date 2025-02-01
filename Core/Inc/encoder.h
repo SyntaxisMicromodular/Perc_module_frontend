@@ -22,7 +22,6 @@ class Encoder{
 public:
   void refresh(bool clk, bool data);
   void execute();
-  void setCallback(void(*funcpointer)(EncoderDirection dir, uint8_t velocity));
   uint8_t maximumVelocityMultiplier = 32;
   bool allowVelocityRecognition = true;
   void (*OnChange)(EncoderDirection, uint8_t) = NULL;
