@@ -198,7 +198,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
     if(huart == &huart2)
 	{
 		messageReceived(&uartbuffer2, Size);
-		HAL_UART_Transmit_DMA(&huart2, uartbuffer2, Size);
+		//HAL_UART_Transmit_DMA(&huart2, uartbuffer2, Size);
 		// Start to listening again - IMPORTANT!
 		HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer2, buffersize);
 	}
@@ -213,6 +213,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
   }*/
   if (huart == &huart1){						//w razie błędu na UART1 po prostu wywołujemy jeszcze raz odbiór na DMA - > "kasujemy" błąd, mial miejsce błąd nr 8 (overrun error)
 	  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, uartbuffer1, buffersize);
+  }
+  if (huart == &huart2){						//w razie błędu na UART1 po prostu wywołujemy jeszcze raz odbiór na DMA - > "kasujemy" błąd, mial miejsce błąd nr 8 (overrun error)
+      HAL_UARTEx_ReceiveToIdle_DMA(&huart2, uartbuffer1, buffersize);
   }
 }
 /* USER CODE END 4 */

@@ -24,9 +24,8 @@ Encoder enc[4];
 Button btn[4];
 
 const int CAPTION_LENGTH = 20;
-const int VALUE_LENGTH = 5;
+const int VALUE_LENGTH = 7;
 const int DISPLAYS = 4;
-
 
 char caption[DISPLAYS][CAPTION_LENGTH];
 
@@ -79,8 +78,10 @@ void drawScreen(uint8_t screenNumber){
 	{
 		char caption_fn[CAPTION_LENGTH];
 		char value_fn[VALUE_LENGTH];
-		strcpy(caption_fn, caption[screenNumber]);
-		strcpy(value_fn, value[screenNumber]);
+		for (int i = 0; i < CAPTION_LENGTH; i++) caption_fn[i] = caption[screenNumber][i];
+		for (int i = 0; i < VALUE_LENGTH; i++) value_fn[i] = value[screenNumber][i];
+		//strcpy(caption_fn, caption[screenNumber]);
+		//strcpy(value_fn, value[screenNumber]);
 
 		SSD1306_SetOLED(&oled[screenNumber]);
 		SSD1306_Clear(BLACK);
@@ -100,8 +101,11 @@ void writeAddress(uint8_t channel){
 }
 
 void sendData(uint8_t* data, uint16_t size){
-	HAL_UART_Transmit_DMA(&huart1, data, size);
-	HAL_UART_Transmit_DMA(&huart2, data, size);
+	//while (huart1.hdmatx->State != HAL_DMA_STATE_READY) {}
+	//HAL_UART_Transmit_DMA(&huart1, data, size);
+	//HAL_UART_Transmit_DMA(&huart2, data, size);
+	HAL_UART_Transmit(&huart1, data, size, 1);
+	HAL_UART_Transmit(&huart2, data, size, 1);
 }
 
 void sendEncoderData(uint8_t encoderNumber, EncoderDirection dir, uint8_t velocity){
@@ -109,6 +113,7 @@ void sendEncoderData(uint8_t encoderNumber, EncoderDirection dir, uint8_t veloci
 	char sign = dir == Increment ? '+' : '-';
 	sprintf(tmp, "E%d%c%d\r\n", encoderNumber, sign, velocity);
 	sendData((uint8_t*)tmp, strlen(tmp));
+	sprintf(value[encoderNumber], "%c%d", sign, velocity);
 }
 
 void enc0Callback(EncoderDirection dir, uint8_t velocity){
@@ -178,6 +183,7 @@ void initializeButtons(){
 }
 
 void setup(){
+	HAL_Delay(100);
 	initializeEncoders();
 	initializeButtons();
 	initializeOLEDs();
@@ -213,6 +219,7 @@ void EncoderInterrupt(){
 }
 
 void messageReceived(char* buf, uint16_t size){
+	if (size < 3) return;
 	uint8_t selectedDisplay = 0;
 	bool valuenotcaption = (buf[0] == 'V');
 
@@ -221,14 +228,16 @@ void messageReceived(char* buf, uint16_t size){
 	if (valuenotcaption){
 		char value_fn[VALUE_LENGTH];
 		for (int i = 0; i < VALUE_LENGTH; i++) value_fn[i] = ' ';
-		for (int i = 0; i < size + 1 && i < VALUE_LENGTH ; i++) value_fn[i] = buf[i+2];
-		strcpy(value[selectedDisplay], value_fn);
+		for (int i = 0; i < size - 2 && i < VALUE_LENGTH ; i++) value_fn[i] = buf[i+2];
+		for (int i = 0; i < VALUE_LENGTH; i++) value[selectedDisplay][i] = value_fn[i];
+		//strcpy(value[selectedDisplay], value_fn);
 	}
 	if (!valuenotcaption){
 		char caption_fn[CAPTION_LENGTH];
 		for (int i = 0; i < CAPTION_LENGTH; i++) caption_fn[i] = ' ';
-		for (int i = 0; i < size + 1 && i < CAPTION_LENGTH ; i++) caption_fn[i] = buf[i+2];
-		strcpy(caption[selectedDisplay], caption_fn);
+		for (int i = 0; i < size - 2 && i < CAPTION_LENGTH ; i++) caption_fn[i] = buf[i+2];
+		for (int i = 0; i < CAPTION_LENGTH; i++) caption[selectedDisplay][i] = caption_fn[i];
+		//strcpy(caption[selectedDisplay], caption_fn);
 	}
 }
 
