@@ -2,6 +2,7 @@
 "./Core/Src/OLED_SSD1306.o"
 "./Core/Src/button.o"
 "./Core/Src/cpp_main.o"
+"./Core/Src/demux.o"
 "./Core/Src/dma.o"
 "./Core/Src/encoder.o"
 "./Core/Src/gpio.o"

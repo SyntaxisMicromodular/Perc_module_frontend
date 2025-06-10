@@ -12,16 +12,21 @@
 #include "fonts/fonts.h"
 #include "encoder.h"
 #include "button.h"
+#include "bitop.h"
+#include "demux.h"
 #include <math.h>
 
-#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
-#define bitSet(value, bit) ((value) |= (1UL << (bit)))
-#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
-#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
-
-struct OLEDdefinition oled[4];
-Encoder enc[4];
-Button btn[4];
+OLEDdefinition oled[4];
+Encoder encoders[4] = { Encoder(MUX_Common2_GPIO_Port, MUX_Common2_Pin, MUX_Common_GPIO_Port, MUX_Common_Pin, 0),
+						Encoder(MUX_Common2_GPIO_Port, MUX_Common2_Pin, MUX_Common_GPIO_Port, MUX_Common_Pin, 1),
+						Encoder(MUX_Common2_GPIO_Port, MUX_Common2_Pin, MUX_Common_GPIO_Port, MUX_Common_Pin, 2),
+						Encoder(MUX_Common2_GPIO_Port, MUX_Common2_Pin, MUX_Common_GPIO_Port, MUX_Common_Pin, 3)
+					  };
+Button buttons[4] = { Button(MUX_Common_GPIO_Port, MUX_Common_Pin, 4),
+					  Button(MUX_Common_GPIO_Port, MUX_Common_Pin, 5),
+					  Button(MUX_Common2_GPIO_Port, MUX_Common2_Pin, 4),
+					  Button(MUX_Common2_GPIO_Port, MUX_Common2_Pin, 5)
+};
 
 const int CAPTION_LENGTH = 20;
 const int VALUE_LENGTH = 7;
@@ -31,7 +36,6 @@ char caption[DISPLAYS][CAPTION_LENGTH];
 
 char value[DISPLAYS][VALUE_LENGTH];
 
-uint8_t currentReadChannel = 0;
 bool readState = false;
 
 void initializeOLEDs(){
@@ -72,7 +76,7 @@ void initializeOLEDs(){
 	SSD1306_SetOLED(&oled[0]);
 }
 
-void drawScreen(uint8_t screenNumber){
+void drawSingleScreen(uint8_t screenNumber){
 	while (hspi1.hdmatx->State != HAL_DMA_STATE_READY) {}
 	if(hspi1.hdmatx->State == HAL_DMA_STATE_READY)
 	{
@@ -80,8 +84,6 @@ void drawScreen(uint8_t screenNumber){
 		char value_fn[VALUE_LENGTH];
 		for (int i = 0; i < CAPTION_LENGTH; i++) caption_fn[i] = caption[screenNumber][i];
 		for (int i = 0; i < VALUE_LENGTH; i++) value_fn[i] = value[screenNumber][i];
-		//strcpy(caption_fn, caption[screenNumber]);
-		//strcpy(value_fn, value[screenNumber]);
 
 		SSD1306_SetOLED(&oled[screenNumber]);
 		SSD1306_Clear(BLACK);
@@ -93,17 +95,7 @@ void drawScreen(uint8_t screenNumber){
 	}
 }
 
-void writeAddress(uint8_t channel){
-	HAL_GPIO_WritePin(MUX_A_GPIO_Port, MUX_A_Pin, (GPIO_PinState)bitRead(channel, 0));
-	HAL_GPIO_WritePin(MUX_B_GPIO_Port, MUX_B_Pin, (GPIO_PinState)bitRead(channel, 1));
-	HAL_GPIO_WritePin(MUX_C_GPIO_Port, MUX_C_Pin, (GPIO_PinState)bitRead(channel, 2));
-	HAL_GPIO_WritePin(MUX_D_GPIO_Port, MUX_D_Pin, (GPIO_PinState)bitRead(channel, 3));
-}
-
 void sendData(uint8_t* data, uint16_t size){
-	//while (huart1.hdmatx->State != HAL_DMA_STATE_READY) {}
-	//HAL_UART_Transmit_DMA(&huart1, data, size);
-	//HAL_UART_Transmit_DMA(&huart2, data, size);
 	HAL_UART_Transmit(&huart1, data, size, 1);
 	HAL_UART_Transmit(&huart2, data, size, 1);
 }
@@ -134,15 +126,15 @@ void enc3Callback(EncoderDirection dir, uint8_t velocity){
 
 void initializeEncoders(){
 	for (uint8_t i = 0; i < 4; i++){	//first scan to avoid "ghost rotations" before setting initial values
-		writeAddress(i);
+		encoders[i].setAddress();
 		HAL_Delay(1);
-		enc[i].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
+		encoders[i].refresh();
 	}
 
-	enc[0].OnChange = enc0Callback;
-	enc[1].OnChange = enc1Callback;
-	enc[2].OnChange = enc2Callback;
-	enc[3].OnChange = enc3Callback;
+	encoders[0].onChange = enc0Callback;
+	encoders[1].onChange = enc1Callback;
+	encoders[2].onChange = enc2Callback;
+	encoders[3].onChange = enc3Callback;
 }
 
 void sendButtonData(uint8_t buttonNumber, bool state){
@@ -169,17 +161,12 @@ void btn3Callback(bool state){
 }
 
 void initializeButtons(){
-	writeAddress(4);
-	btn[0].refresh(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_RESET);
-	btn[2].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_RESET);
-	writeAddress(5);
-	btn[1].refresh(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_RESET);
-	btn[3].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_RESET);
+	for (uint8_t i = 0; i < 4; i++) buttons[i].refresh();
 
-	btn[0].OnChange = btn0Callback;
-	btn[1].OnChange = btn1Callback;
-	btn[2].OnChange = btn2Callback;
-	btn[3].OnChange = btn3Callback;
+	buttons[0].onChange = btn0Callback;
+	buttons[1].onChange = btn1Callback;
+	buttons[2].onChange = btn2Callback;
+	buttons[3].onChange = btn3Callback;
 }
 
 void setup(){
@@ -189,18 +176,18 @@ void setup(){
 	initializeOLEDs();
 	for (uint8_t i = 0; i < DISPLAYS; i++){
 		while(hspi1.hdmatx->State != HAL_DMA_STATE_READY){}
-		drawScreen(i);
+		drawSingleScreen(i);
 	}
 }
 
 void EncoderInterrupt(){
+	static uint8_t currentReadChannel = 0;
 	if (!readState){
-		writeAddress(currentReadChannel);
+		encoders[currentReadChannel].setAddress();
 		readState = true;
 	}
 	if(readState){
-		enc[currentReadChannel].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_SET, HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_SET);
-		enc[currentReadChannel].execute();
+		encoders[currentReadChannel].refresh();
 		++currentReadChannel;
 		if (currentReadChannel == 4){
 			currentReadChannel = 0;
@@ -208,14 +195,7 @@ void EncoderInterrupt(){
 		readState = false;
 	}
 
-	writeAddress(4);
-	btn[0].refresh(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_RESET);
-	btn[2].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_RESET);
-	writeAddress(5);
-	btn[1].refresh(HAL_GPIO_ReadPin(MUX_Common_GPIO_Port, MUX_Common_Pin) == GPIO_PIN_RESET);
-	btn[3].refresh(HAL_GPIO_ReadPin(MUX_Common2_GPIO_Port, MUX_Common2_Pin) == GPIO_PIN_RESET);
-
-	for (uint8_t i = 0; i < 4; i++) btn[i].execute();
+	for (uint8_t i = 0; i < 4; i++) buttons[i].refresh();
 }
 
 void messageReceived(char* buf, uint16_t size){
@@ -241,7 +221,6 @@ void messageReceived(char* buf, uint16_t size){
 	}
 }
 
-void loop(){
-	for (int i = 0; i < DISPLAYS; i++) drawScreen(i);
-	HAL_Delay(20);
+void refreshScreens(){
+	for (int i = 0; i < DISPLAYS; i++) drawSingleScreen(i);
 }

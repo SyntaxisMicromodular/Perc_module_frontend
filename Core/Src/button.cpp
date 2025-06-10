@@ -1,10 +1,12 @@
 #include <button.h>
-void Button::refresh(bool in){
-	currentState = in;
+void Button::refresh(){
+	writeEncoderDemuxAddress(address);
+	currentState = HAL_GPIO_ReadPin(port, pin);
+	execute();
 }
 void Button::execute(){
 	if (currentState != previousState) {
-		OnChange(currentState);
+		if (onChange != nullptr) onChange(currentState);
 		previousState = currentState;
 	}
 }

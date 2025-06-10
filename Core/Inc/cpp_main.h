@@ -20,7 +20,7 @@ void EncoderInterrupt();
 
 void messageReceived(char* buf, uint16_t size);
 
-void loop();
+void refreshScreens();
 
 #ifdef __cplusplus
 }

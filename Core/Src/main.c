@@ -115,7 +115,8 @@ int main(void)
 
   while (1)
   {
-	 loop();
+	 refreshScreens();
+	 HAL_Delay(20);
 
     /* USER CODE END WHILE */
 
