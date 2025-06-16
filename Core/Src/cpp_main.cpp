@@ -105,7 +105,7 @@ void sendEncoderData(uint8_t encoderNumber, EncoderDirection dir, uint8_t veloci
 	char sign = dir == Increment ? '+' : '-';
 	sprintf(tmp, "E%d%c%d\r\n", encoderNumber, sign, velocity);
 	sendData((uint8_t*)tmp, strlen(tmp));
-	sprintf(value[encoderNumber], "%c%d", sign, velocity);
+	//sprintf(value[encoderNumber], "%c%d", sign, velocity);
 }
 
 void enc0Callback(EncoderDirection dir, uint8_t velocity){
