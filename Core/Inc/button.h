@@ -21,6 +21,7 @@ private:
 	GPIO_TypeDef* port;
 	uint16_t pin;
 	uint8_t address = 0;
+	uint32_t deltaT = 0;
 };
 
 #endif
